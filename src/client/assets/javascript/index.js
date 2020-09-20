@@ -80,12 +80,19 @@ async function delay(ms) {
 
 // This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
-	// render starting UI
-	renderAt('#race', renderRaceStartView())
+	// console.log("Inside method handleCreateRace...");
 
 	// TODO - Get player_id and track_id from the store
+	const trackId = store.track_id;
+	const playerId = store.track_id;
+
+	// render starting UI
+	renderAt('#race', renderRaceStartView(trackId, [playerId]))
+
 	
 	// const race = TODO - invoke the API call to create the race, then save the result
+	const race = await createRace(playerId, trackId);
+	// console.log("Created Race: " + JSON.stringify(race));
 
 	// TODO - update the store with the race id
 
@@ -151,6 +158,7 @@ function handleSelectPodRacer(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected racer to the store
+	store.player_id = target.id;
 }
 
 function handleSelectTrack(target) {
@@ -166,6 +174,8 @@ function handleSelectTrack(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected track id to the store
+	console.log("Setting track ID to: " + target.id);
+	store.track_id = target.id;
 	
 }
 
@@ -188,7 +198,7 @@ function renderRacerCars(racers) {
 
 	return `
 		<ul id="racers">
-			${reuslts}
+			${results}
 		</ul>
 	`
 }
@@ -240,6 +250,8 @@ function renderCountdown(count) {
 }
 
 function renderRaceStartView(track, racers) {
+	console.log("Inside method renderRaceStartView...");
+	console.log("Track = " + track);
 	return `
 		<header>
 			<h1>Race: ${track.name}</h1>
@@ -343,15 +355,30 @@ async function getTracks() {
 	})
 }
 
-function getRacers() {
+async function getRacers() {
 	// GET request to `${SERVER}/api/cars`
+
+	return new Promise((resolve, reject) => {
+		return fetch (`${SERVER}/api/cars`)
+		.then(result => {
+			return result.json();
+		})
+		.then(data => {
+			resolve(data);
+		})
+		.catch(error => {
+			console.error("Error while querying cars data from Server API: " + error);
+			// throw new Error(error);
+		})
+	})
+
 }
 
-function createRace(player_id, track_id) {
+async function createRace(player_id, track_id) {
 	player_id = parseInt(player_id)
 	track_id = parseInt(track_id)
 	const body = { player_id, track_id }
-	
+	console.log(JSON.stringify(body));
 	return fetch(`${SERVER}/api/races`, {
 		method: 'POST',
 		...defaultFetchOpts(),
@@ -362,8 +389,23 @@ function createRace(player_id, track_id) {
 	.catch(err => console.log("Problem with createRace request::", err))
 }
 
-function getRace(id) {
+async function getRace(id) {
 	// GET request to `${SERVER}/api/races/${id}`
+
+	return new Promise((resolve, reject) => {
+		return fetch (`${SERVER}/api/races/${id}`)
+		.then(result => {
+			return result.json();
+		})
+		.then(data => {
+			resolve(data);
+		})
+		.catch(error => {
+			console.error("Error while querying races data from Server API: " + error);
+			// throw new Error(error);
+		})
+	})
+
 }
 
 function startRace(id) {
