@@ -87,14 +87,19 @@ async function handleCreateRace() {
 	const playerId = store.track_id;
 
 	// render starting UI
-	renderAt('#race', renderRaceStartView(trackId, [playerId]))
+	const tracksInfo = await getTracks();
+	const raceTrackInfo = tracksInfo.filter(aTrack => aTrack.id == trackId)[0];
+	renderAt('#race', renderRaceStartView(raceTrackInfo, [playerId]))
 
 	
 	// const race = TODO - invoke the API call to create the race, then save the result
 	const race = await createRace(playerId, trackId);
-	// console.log("Created Race: " + JSON.stringify(race));
+	console.log("Created Race: " + JSON.stringify(race));
 
 	// TODO - update the store with the race id
+	// Server Bug? Race ID always returning as ID + 1.
+	store.race_id = race.ID - 1;
+	console.log("Store info = " + JSON.stringify(store));
 
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
@@ -251,7 +256,7 @@ function renderCountdown(count) {
 
 function renderRaceStartView(track, racers) {
 	console.log("Inside method renderRaceStartView...");
-	console.log("Track = " + track);
+	console.log("Track = " + JSON.stringify(track));
 	return `
 		<header>
 			<h1>Race: ${track.name}</h1>
