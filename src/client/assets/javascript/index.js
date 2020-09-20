@@ -20,11 +20,17 @@ async function onPageLoad() {
 				const html = renderTrackCards(tracks)
 				renderAt('#tracks', html)
 			})
+			.catch(error => {
+				console.error("Error retrieving data from Get Tracks API: " + error)
+			})
 
 		getRacers()
 			.then((racers) => {
 				const html = renderRacerCars(racers)
 				renderAt('#racers', html)
+			})
+			.catch(error => {
+				console.error("Error rendering racer cars: " + error);
 			})
 	} catch(error) {
 		console.log("Problem getting tracks and racers ::", error.message)
@@ -319,8 +325,22 @@ function defaultFetchOpts() {
 
 // TODO - Make a fetch call (with error handling!) to each of the following API endpoints 
 
-function getTracks() {
+async function getTracks() {
 	// GET request to `${SERVER}/api/tracks`
+
+	return new Promise((resolve, reject) => {
+		return fetch (`${SERVER}/api/tracks`)
+		.then(result => {
+			return result.json();
+		})
+		.then(data => {
+			resolve(data);
+		})
+		.catch(error => {
+			console.error("Error while querying tracks data from Server API: " + error);
+			// throw new Error(error);
+		})
+	})
 }
 
 function getRacers() {
