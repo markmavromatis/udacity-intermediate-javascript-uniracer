@@ -84,7 +84,7 @@ async function handleCreateRace() {
 
 	// TODO - Get player_id and track_id from the store
 	const trackId = store.track_id;
-	const playerId = store.track_id;
+	const playerId = store.player_id;
 
 	// render starting UI
 	const tracksInfo = await getTracks();
@@ -116,24 +116,37 @@ async function handleCreateRace() {
 
 function runRace(raceID) {
 	return new Promise(resolve => {
-	// TODO - use Javascript's built in setInterval method to get race info every 500ms
+		// TODO - use Javascript's built in setInterval method to get race info every 500ms
+		const raceInterval = setInterval(async function(){
+			console.log("Run Race Interval")
+			const raceInfo = await getRace(raceID);
+			/*
+			TODO - if the race info status property is "in-progress", update the leaderboard by calling:
+			renderAt('#leaderBoard', raceProgress(res.positions))
+			*/
+			if (raceInfo.status == "in-progress") {
+				console.log("\tRace is in progress! Rendering leaderboard...");
+				renderAt('#leaderBoard', raceProgress(raceInfo.positions))
+			} else if (raceInfo.status == "finished") {
+				/*
+					TODO - if the race info status property is "finished", run the following:
 
-	/* 
-		TODO - if the race info status property is "in-progress", update the leaderboard by calling:
+					clearInterval(raceInterval) // to stop the interval from repeating
+					renderAt('#race', resultsView(res.positions)) // to render the results view
+					reslove(res) // resolve the promise
+				*/
+				clearInterval(raceInterval);
+				renderAt('#race', resultsView(raceInfo.positions)) // to render the results view
+				resolve(raceInfo) // resolve the promise
+			} else {
+				throw new Error("Unexpected race status: " + raceInfo.status);
+			}
 
-		renderAt('#leaderBoard', raceProgress(res.positions))
-	*/
-
-	/* 
-		TODO - if the race info status property is "finished", run the following:
-
-		clearInterval(raceInterval) // to stop the interval from repeating
-		renderAt('#race', resultsView(res.positions)) // to render the results view
-		reslove(res) // resolve the promise
-	*/
-		resolve(true);
+		}, 500);
+	}).catch(err => {
+		// remember to add error handling for the Promise
+		console.error("Error encountered in runRace: " + err);
 	})
-	// remember to add error handling for the Promise
 }
 
 async function runCountdown() {
@@ -174,7 +187,7 @@ function handleSelectPodRacer(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected racer to the store
-	store.player_id = target.id;
+	store.player_id = parseInt(target.id);
 }
 
 function handleSelectTrack(target) {
@@ -301,7 +314,12 @@ function resultsView(positions) {
 }
 
 function raceProgress(positions) {
+	console.log("Inside method raceProgress...");
 	let userPlayer = positions.find(e => e.id === store.player_id)
+
+	console.log("\tPositions = " + JSON.stringify(positions));
+	console.log("\tPlayer ID = " + store.player_id);
+	console.log("\tUser player = " + userPlayer);
 	userPlayer.driver_name += " (you)"
 
 	positions = positions.sort((a, b) => (a.segment > b.segment) ? -1 : 1)
