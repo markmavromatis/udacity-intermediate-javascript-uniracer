@@ -94,20 +94,24 @@ async function handleCreateRace() {
 	
 	// const race = TODO - invoke the API call to create the race, then save the result
 	const race = await createRace(playerId, trackId);
-	console.log("Created Race: " + JSON.stringify(race));
 
 	// TODO - update the store with the race id
 	// Server Bug? Race ID always returning as ID + 1.
 	store.race_id = race.ID - 1;
-	console.log("Store info = " + JSON.stringify(store));
 
 	// The race has been created, now start the countdown
 	// TODO - call the async function runCountdown
 	await runCountdown()
 
 	// TODO - call the async function startRace
+	// console.log("Starting race now...");
+	// console.log("\tRace ID: " + store.race_id);
+	await startRace(store.race_id);
 
 	// TODO - call the async function runRace
+	console.log("Running race now...");
+	// console.log("\tRace ID: " + store.race_id);
+	await runRace(store.race_id);
 }
 
 function runRace(raceID) {
@@ -127,6 +131,7 @@ function runRace(raceID) {
 		renderAt('#race', resultsView(res.positions)) // to render the results view
 		reslove(res) // resolve the promise
 	*/
+		resolve(true);
 	})
 	// remember to add error handling for the Promise
 }
@@ -139,19 +144,20 @@ async function runCountdown() {
 
 		return new Promise(resolve => {
 			// TODO - use Javascript's built in setInterval method to count down once per second
-			setInterval(function(){
+			const newInterval = setInterval(function(){
 				if (timer > 0) {
 					// run this DOM manipulation to decrement the countdown for the user
 					document.getElementById('big-numbers').innerHTML = --timer;
 				} else {
 					// TODO - if the countdown is done, clear the interval, resolve the promise, and return
-					clearInterval();
+					clearInterval(newInterval);
+					resolve(true);
 				}
 				// alert("Hello"); 
 			}, 1000);
 		})
 	} catch(error) {
-		console.log(error);
+		console.error(error);
 	}
 }
 
@@ -184,7 +190,6 @@ function handleSelectTrack(target) {
 	target.classList.add('selected')
 
 	// TODO - save the selected track id to the store
-	console.log("Setting track ID to: " + target.id);
 	store.track_id = target.id;
 	
 }
@@ -419,11 +424,11 @@ async function getRace(id) {
 }
 
 function startRace(id) {
+	// start service does not return anything. So no need to capture results.
 	return fetch(`${SERVER}/api/races/${id}/start`, {
 		method: 'POST',
 		...defaultFetchOpts(),
 	})
-	.then(res => res.json())
 	.catch(err => console.log("Problem with getRace request::", err))
 }
 
